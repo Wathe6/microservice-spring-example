@@ -1,0 +1,51 @@
+services:
+  eureka:
+    build:
+      context: ./eureka
+    image: eureka-service
+    container_name: eureka
+    ports:
+      - "8761:8761"
+    environment:
+      SPRING_APPLICATION_NAME: eureka
+      EUREKA_CLIENT_REGISTER_WITH_EUREKA: "false"
+      EUREKA_CLIENT_FETCH_REGISTRY: "false"
+    networks:
+      - micro-net
+
+  hello-service:
+    build:
+      context: ./demo
+    image: hello-service
+    container_name: hello-service
+    depends_on:
+      - eureka
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_APPLICATION_NAME: hello-service
+      SERVER_PORT: 8081
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka:8761/eureka/
+    networks:
+      - micro-net
+
+  gateway:
+    build:
+      context: ./gateway
+    image: gateway-service
+    container_name: gateway
+    depends_on:
+      - eureka
+      - hello-service
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_APPLICATION_NAME: gateway
+      SERVER_PORT: 8080
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka:8761/eureka/
+    networks:
+      - micro-net
+
+networks:
+  micro-net:
+    driver: bridge
